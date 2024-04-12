@@ -20,8 +20,8 @@ def read_parse(path:str, remap_dict:dict)->pd.DataFrame:
     return df
 
 
-def clean_title_col(df:pd.DataFrame, str_col:str)->pd.DataFrame:
-    """Cleans title column by strpping special characters and white space
+def clean_text_col(df:pd.DataFrame, str_col:str)->pd.DataFrame:
+    """Cleans text column by strpping special characters and white space
 
     Args:
         df (pd.DataFrame): Pandas data frame that contains string column
@@ -47,24 +47,32 @@ def get_topics(df:pd.DataFrame, feature_col:str):
     Returns:
         None
     """
-
+    from bertopic import BERTopic
+    from bertopic.representation import KeyBERTInspired
+  
+    representation_model = KeyBERTInspired(random_state=1)
+    topic_model = BERTopic(representation_model=representation_model)
+    topics, probs = topic_model.fit_transform(df[feature_col])
+    print(topic_model.get_topic_info())
     
+
 titles_files_dir = "reddit_scraped_data/titles"
 title_file_list = os.listdir(titles_files_dir)
 title_file_list = [os.path.join(titles_files_dir, file) for file in title_file_list]
 title_remap_cols = {"Content2": "post_title", "Content5": "comment_count"}
 title_data_list = [read_parse(path=file, remap_dict=title_remap_cols)[:100] for file in title_file_list]
-clean_title_data = [clean_title_col(df=data, str_col="post_title") for data in title_data_list]
+clean_title_data = [clean_text_col(df=data, str_col="post_title") for data in title_data_list]
 title_data = pd.concat(clean_title_data, axis=0, ignore_index=True)
 
-files = ["reddit_scraped_data/comments/chatgpt_privacy_commentsban.csv",
+comment_files = ["reddit_scraped_data/comments/chatgpt_privacy_commentsban.csv",
          "reddit_scraped_data/comments/privacy comments.csv",
          "reddit_scraped_data/comments/openai ban.csv"]
 str_cols = {"py0":"Text", "Field1":"Text", "Text":"Text"}
 
-comemnts_df_list = [clean_title_col(pd.DataFrame(pd.read_csv(file)[col]), 
-                                 str_col=col).rename(columns={col:remap}) for file, col, remap in zip(files, 
+comemnts_df_list = [clean_text_col(pd.DataFrame(pd.read_csv(file)[col]), 
+                                 str_col=col).rename(columns={col:remap}) for file, col, remap in zip(comment_files, 
                                                                           str_cols.keys(), str_cols.values())]
 comments_data = pd.concat(comemnts_df_list, axis=0, ignore_index=True)
-print(title_data)
-print(comments_data)
+
+get_topics(df=title_data, feature_col="post_title")
+get_topics(df=comments_data, feature_col="Text")
