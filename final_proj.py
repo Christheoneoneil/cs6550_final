@@ -1,7 +1,7 @@
 import pandas as pd
 import os
-
-
+pd.set_option("display.max_columns", 500)
+pd.set_option("display.max_rows", 500)
 def read_parse(path:str, remap_dict:dict)->pd.DataFrame:
     """ read and parse relevant columns from scraped data
 
@@ -65,8 +65,11 @@ def get_topics(df:pd.DataFrame, feature_col:str):
 titles_files_dir = "reddit_scraped_data/titles"
 title_file_list = os.listdir(titles_files_dir)
 title_file_list = [os.path.join(titles_files_dir, file) for file in title_file_list]
-title_remap_cols = {"Content2": "post_title", "Content5": "comment_count"}
-title_data_list = [read_parse(path=file, remap_dict=title_remap_cols)[:100] for file in title_file_list]
+
+title_remap_cols = [{"Content2": "post_title", "Content5": "comment_count"},
+                    {"Content2": "post_title", "Content4": "comment_count"},
+                    {"Content2": "post_title", "Content5": "comment_count"}]
+title_data_list = [read_parse(path=file, remap_dict=remap_cols)[:100] for file,remap_cols in zip(title_file_list, title_remap_cols)]
 clean_title_data = [clean_text_col(df=data, str_col="post_title") for data in title_data_list]
 title_data = pd.concat(clean_title_data, axis=0, ignore_index=True)
 
@@ -80,5 +83,10 @@ comemnts_df_list = [clean_text_col(pd.DataFrame(pd.read_csv(file)[col]),
                                                                           str_cols.keys(), str_cols.values())]
 comments_data = pd.concat(comemnts_df_list, axis=0, ignore_index=True)
 
-get_topics(df=title_data, feature_col="post_title")
-get_topics(df=comments_data, feature_col="Text")
+# get_topics(df=title_data, feature_col="post_title")
+# get_topics(df=comments_data, feature_col="Text")
+
+print(title_data)
+title_data["comment_count"] = title_data["comment_count"].apply(lambda x: int(x))
+
+print(title_data.sort_values(by="comment_count"))
