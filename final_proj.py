@@ -48,13 +48,19 @@ def get_topics(df:pd.DataFrame, feature_col:str):
         None
     """
     from bertopic import BERTopic
+    from umap import UMAP
     from bertopic.representation import KeyBERTInspired
-  
+    umap = UMAP(n_neighbors=15,
+            n_components=5,
+            min_dist=0.0,
+            metric='cosine',
+            low_memory=False,
+            random_state=1337) 
     representation_model = KeyBERTInspired(random_state=1)
-    topic_model = BERTopic(representation_model=representation_model)
+    topic_model = BERTopic(representation_model=representation_model, umap_model=umap)
     topics, probs = topic_model.fit_transform(df[feature_col])
     print(topic_model.get_topic_info())
-    
+   
 
 titles_files_dir = "reddit_scraped_data/titles"
 title_file_list = os.listdir(titles_files_dir)
