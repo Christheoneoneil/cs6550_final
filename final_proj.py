@@ -83,10 +83,9 @@ comemnts_df_list = [clean_text_col(pd.DataFrame(pd.read_csv(file)[col]),
                                                                           str_cols.keys(), str_cols.values())]
 comments_data = pd.concat(comemnts_df_list, axis=0, ignore_index=True)
 
-# get_topics(df=title_data, feature_col="post_title")
-# get_topics(df=comments_data, feature_col="Text")
+get_topics(df=title_data, feature_col="post_title")
+get_topics(df=comments_data, feature_col="Text")
 
-print(title_data)
 title_data["comment_count"] = title_data["comment_count"].apply(lambda x: int(x))
 
-print(title_data.sort_values(by="comment_count"))
+print(title_data.sort_values(by="comment_count", ascending=False)[:5].to_dict())
